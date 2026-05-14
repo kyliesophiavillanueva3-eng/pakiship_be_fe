@@ -18,7 +18,12 @@ export class SupabaseService {
   }
 
   createServerClient() {
-    return createClient(this.supabaseUrl!, this.supabaseAnonKey!);
+    return createClient(this.supabaseUrl!, this.supabaseAnonKey!, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
   }
 
   createAdminClient() {

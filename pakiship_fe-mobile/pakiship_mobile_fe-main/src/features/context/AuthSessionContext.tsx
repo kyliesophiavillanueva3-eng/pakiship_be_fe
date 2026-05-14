@@ -14,14 +14,15 @@ const AuthSessionContext = createContext<AuthSessionContextValue | undefined>(un
 export function normalizeAppRole(role: string | undefined): AppRole {
   const normalizedRole = role?.trim().toLowerCase().replace(/[\s-]+/g, '_') ?? '';
 
-  if (normalizedRole.includes('operator')) {
+  if (normalizedRole === 'operator' || normalizedRole.includes('operator')) {
     return 'operator';
   }
 
-  if (normalizedRole.includes('driver')) {
+  if (normalizedRole === 'driver' || normalizedRole.includes('driver')) {
     return 'driver';
   }
 
+  // 'customer' and 'parcel_sender' both go to the sender home
   return 'parcel_sender';
 }
 

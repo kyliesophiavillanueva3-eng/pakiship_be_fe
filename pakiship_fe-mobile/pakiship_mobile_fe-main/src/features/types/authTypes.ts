@@ -18,12 +18,14 @@ export type LoginRequest = {
 
 export type AuthUser = {
   id: string;
-  email: string;
   fullName: string;
   role: string;
+  email?: string;
 };
 
 export type AuthResponse = {
-  message: string;
   user: AuthUser;
+  redirectPath?: string;
+  requiresTwoFactor?: boolean;
+  challengeToken?: string;
 };

@@ -10,12 +10,12 @@ export class ProfileRepository {
 
   findByUserId(userId: string) {
     const supabase = this.supabaseService.createAdminClient();
-    return supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+    return supabase.schema("account").from("profiles").select("*").eq("id", userId).maybeSingle();
   }
 
   findPotentialDuplicate(userId: string, email?: string, phone?: string) {
     const supabase = this.supabaseService.createAdminClient();
-    let query = supabase.from("profiles").select("id");
+    let query = supabase.schema("account").from("profiles").select("id");
 
     if (email && phone) {
       query = query.or(`email.eq.${email},phone.eq.${phone}`);
@@ -43,8 +43,7 @@ export class ProfileRepository {
     if (input.profilePhotoUrl !== undefined) updatePayload.profile_picture = input.profilePhotoUrl;
 
     return supabase
-      .schema("account")
-      .from("profiles")
+      .schema("account").from("profiles")
       .update(updatePayload)
       .eq("id", userId)
       .select("*")

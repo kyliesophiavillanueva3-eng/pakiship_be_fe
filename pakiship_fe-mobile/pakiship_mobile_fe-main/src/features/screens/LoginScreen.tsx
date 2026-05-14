@@ -86,16 +86,6 @@ export default function LoginScreen({ onBackToLauncher }: LoginScreenProps) {
       return;
     }
 
-    if (!/\d/.test(password)) {
-      setLoginError('Password must contain at least one number.');
-      return;
-    }
-
-    if (!/[^\w\s]/.test(password)) {
-      setLoginError('Password must contain at least one special character.');
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       setLoginError('');
@@ -106,7 +96,7 @@ export default function LoginScreen({ onBackToLauncher }: LoginScreenProps) {
 
       setCurrentUser(result.user);
 
-      const appRole = normalizeAppRole(result.user.role);
+      const appRole = normalizeAppRole(result.user?.role);
 
       if (appRole === 'driver') {
         navigation.reset({

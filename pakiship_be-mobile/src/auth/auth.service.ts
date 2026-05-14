@@ -92,8 +92,7 @@ export class AuthService {
     const supabase = this.supabaseService.createServerClient();
 
     const { data: profile, error: profileError } = await admin
-      .schema("account")
-      .from("profiles")
+      .schema("account").from("profiles")
       .select("email")
       .eq("id", session.userId)
       .single();
@@ -121,8 +120,7 @@ export class AuthService {
     }
 
     const { error } = await admin
-      .schema("account")
-      .from("profiles")
+      .schema("account").from("profiles")
       .update({ password_updated_at: passwordUpdatedAt })
       .eq("id", session.userId);
 
@@ -140,8 +138,7 @@ export class AuthService {
     const admin = this.supabaseService.createAdminClient();
     const [profileResponse, authUserResponse] = await Promise.all([
       admin
-        .schema("account")
-      .from("profiles")
+        .schema("account").from("profiles")
         .select("email, two_factor_enabled")
         .eq("id", session.userId)
         .single(),
@@ -204,8 +201,7 @@ export class AuthService {
     }
 
     const { error } = await admin
-      .schema("account")
-      .from("profiles")
+      .schema("account").from("profiles")
       .update({ two_factor_enabled: true })
       .eq("id", session.userId);
 
@@ -246,8 +242,7 @@ export class AuthService {
     }
 
     const { error } = await admin
-      .schema("account")
-      .from("profiles")
+      .schema("account").from("profiles")
       .update({ two_factor_enabled: false })
       .eq("id", session.userId);
 
@@ -269,15 +264,13 @@ export class AuthService {
     const normalizedRole = role ? normalizeRole(role) : undefined;
 
     const admin = this.supabaseService.createAdminClient();
-    const supabase = this.supabaseService.createServerClient();
     const normalizedIdentifier = identifier.includes("@")
       ? normalizeEmail(identifier)
       : normalizePhone(identifier);
     const identifierColumn = identifier.includes("@") ? "email" : "phone";
 
     let query = admin
-      .schema("account")
-      .from("profiles")
+      .schema("account").from("profiles")
       .select("email")
       .eq(identifierColumn, normalizedIdentifier);
 
@@ -299,7 +292,7 @@ export class AuthService {
     }
 
     const redirectTo = `${origin.replace(/\/$/, "")}/reset-password`;
-    const resetResult = await supabase.auth.resetPasswordForEmail(profileRow.email, {
+    const resetResult = await admin.auth.resetPasswordForEmail(profileRow.email, {
       redirectTo,
     });
 
@@ -328,8 +321,7 @@ export class AuthService {
     const phone = normalizePhone(input.phone);
 
     const { data: duplicateProfiles, error: duplicateError } = await admin
-      .schema("account")
-      .from("profiles")
+      .schema("account").from("profiles")
       .select("id")
       .or(`email.eq.${email},phone.eq.${phone}`)
       .limit(1);
@@ -342,7 +334,6 @@ export class AuthService {
       throw new ConflictException("An account with that email or mobile number already exists.");
     }
 
-    console.log(`[Signup] Creating Auth user for: ${email}`);
     const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email,
       password: input.password,
@@ -354,11 +345,9 @@ export class AuthService {
     });
 
     if (authError || !authData.user) {
-      console.error(`[Signup] Auth creation failed for ${email}:`, authError?.message);
       throw new BadRequestException(authError?.message || "Unable to create auth account.");
     }
 
-    console.log(`[Signup] Auth user created: ${authData.user.id}. Inserting profile...`);
     const profile = {
       id: authData.user.id,
       fullName: input.fullName.trim(),
@@ -393,10 +382,7 @@ export class AuthService {
       console.error(`[Signup] Profile insert failed for ${profile.id}:`, profileError.message);
     }
     
-    // Some existing shared schemas may not yet have the newer profile columns.
-    // Retry with a minimal payload so signup can still proceed.
     if (profileError && isMissingProfileColumnError(profileError.message)) {
-      console.log(`[Signup] Retrying with minimal profile payload for ${profile.id}`);
       profileError = (
         await admin.schema("account").from("profiles").upsert({
           id: profile.id,
@@ -409,19 +395,12 @@ export class AuthService {
           created_at: profile.createdAt,
         })
       ).error;
-      
-      if (profileError) {
-        console.error(`[Signup] Minimal profile retry failed:`, profileError.message);
-      }
     }
 
     if (profileError) {
-      console.log(`[Signup] Final failure. Deleting Auth user ${profile.id}`);
       await admin.auth.admin.deleteUser(profile.id);
       throw new InternalServerErrorException(profileError.message || "Profile could not be saved.");
     }
-
-    console.log(`[Signup] Success for ${profile.id}`);
 
     return {
       user: {
@@ -455,8 +434,7 @@ export class AuthService {
     const identifierColumn = identifier.includes("@") ? "email" : "phone";
 
     let query = admin
-      .schema("account")
-      .from("profiles")
+      .schema("account").from("profiles")
       .select("id, full_name, email, phone, role, two_factor_enabled")
       .eq(identifierColumn, normalizedIdentifier);
 
