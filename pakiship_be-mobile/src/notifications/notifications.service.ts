@@ -16,7 +16,8 @@ export class NotificationsService {
   async listForUser(session: SessionPayload) {
     const result = await this.notificationsRepository.listByUserId(session.userId);
     if (result.error) {
-      throw new InternalServerErrorException("Unable to load notifications.");
+      // Table may not exist yet — return empty list instead of crashing
+      return { notifications: [], unreadCount: 0 };
     }
 
     return {

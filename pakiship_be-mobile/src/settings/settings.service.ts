@@ -100,7 +100,7 @@ export class SettingsService {
     }
 
     const profile = this.settingsRepository.mapAccessRow(profileResult.data);
-    const authClient = this.supabaseService.createServerClient();
+    const authClient = this.supabaseService.createAdminClient();
     const verifyResult = await authClient.auth.signInWithPassword({
       email: profile.email,
       password: currentPassword,

@@ -181,8 +181,7 @@ export class OperatorMobileController {
     const admin = this.supabaseService.createAdminClient();
 
     const [profileResult, assignmentResult] = await Promise.all([
-      admin
-        .from("profiles")
+      admin.schema("account").from("profiles")
         .select("id, full_name, email, phone, profile_picture")
         .eq("id", session.userId)
         .single(),
@@ -244,8 +243,7 @@ export class OperatorMobileController {
       throw new BadRequestException("No fields to update.");
     }
 
-    const { error } = await admin
-      .from("profiles")
+    const { error } = await admin.schema("account").from("profiles")
       .update(updates)
       .eq("id", session.userId);
 
@@ -304,8 +302,7 @@ export class OperatorMobileController {
 
     const { data: urlData } = admin.storage.from(OPERATOR_PROFILE_BUCKET).getPublicUrl(objectPath);
 
-    const { error: updateError } = await admin
-      .from("profiles")
+    const { error: updateError } = await admin.schema("account").from("profiles")
       .update({ profile_picture: urlData.publicUrl })
       .eq("id", session.userId);
 

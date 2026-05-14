@@ -28,4 +28,5 @@ export type AuthResponse = {
   redirectPath?: string;
   requiresTwoFactor?: boolean;
   challengeToken?: string;
+  sessionToken?: string;
 };

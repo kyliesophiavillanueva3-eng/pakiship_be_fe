@@ -89,7 +89,6 @@ export class AuthService {
     }
 
     const admin = this.supabaseService.createAdminClient();
-    const supabase = this.supabaseService.createServerClient();
 
     const { data: profile, error: profileError } = await admin
       .schema("account").from("profiles")
@@ -101,7 +100,7 @@ export class AuthService {
       throw new NotFoundException("Profile not found.");
     }
 
-    const signInResult = await supabase.auth.signInWithPassword({
+    const signInResult = await admin.auth.signInWithPassword({
       email: profile.email,
       password: currentPassword,
     });
@@ -425,7 +424,6 @@ export class AuthService {
     const normalizedRole = role ? normalizeRole(role) : undefined;
 
     const admin = this.supabaseService.createAdminClient();
-    const supabase = this.supabaseService.createServerClient();
 
     const normalizedIdentifier = identifier.includes("@")
       ? normalizeEmail(identifier)
@@ -448,7 +446,8 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials.");
     }
 
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    // Verify password via admin client — avoids anon key issues in server-side Node.js context
+    const { data: authData, error: authError } = await admin.auth.signInWithPassword({
       email: profileRow.email,
       password,
     });

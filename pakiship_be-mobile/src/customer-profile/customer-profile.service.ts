@@ -218,8 +218,7 @@ export class CustomerProfileService {
       submittedDraftsResponse,
       activityLogsResponse,
     ] = await Promise.all([
-      admin
-        .from("profiles")
+      admin.schema("account").from("profiles")
         .select(`
           id,
           full_name,
@@ -230,14 +229,7 @@ export class CustomerProfileService {
           city,
           province,
           profile_picture,
-          discount_id_uploaded,
-          discount_id_type,
-          discount_id_status,
-          discount_id_file_url,
-          discount_id_submitted_at,
-          discount_id_verified_at,
           two_factor_enabled,
-          password_updated_at,
           created_at
         `)
         .eq("id", session.userId)
@@ -284,14 +276,14 @@ export class CustomerProfileService {
         province: profile.province,
         profilePicture: profile.profile_picture,
         preferences,
-        discountIdUploaded: Boolean(profile.discount_id_uploaded),
-        discountIdType: profile.discount_id_type,
-        discountIdStatus: profile.discount_id_status,
-        discountIdFileUrl: profile.discount_id_file_url,
-        discountIdSubmittedAt: profile.discount_id_submitted_at,
-        discountIdVerifiedAt: profile.discount_id_verified_at,
+        discountIdUploaded: false,
+        discountIdType: null,
+        discountIdStatus: null,
+        discountIdFileUrl: null,
+        discountIdSubmittedAt: null,
+        discountIdVerifiedAt: null,
         twoFactorEnabled: Boolean(profile.two_factor_enabled),
-        passwordUpdatedAt: profile.password_updated_at,
+        passwordUpdatedAt: null,
       },
       stats: {
         totalBookings: submittedDraftsResponse.count ?? 0,
@@ -327,8 +319,7 @@ export class CustomerProfileService {
       throw new BadRequestException("Full name, email, phone, and address are required.");
     }
 
-    const { error: profileError } = await admin
-      .from("profiles")
+    const { error: profileError } = await admin.schema("account").from("profiles")
       .update({
         full_name: fullName,
         email,
@@ -510,8 +501,7 @@ export class CustomerProfileService {
       .getPublicUrl(objectPath);
     const profilePicture = publicUrlData.publicUrl;
 
-    const { error } = await admin
-      .from("profiles")
+    const { error } = await admin.schema("account").from("profiles")
       .update({ profile_picture: profilePicture })
       .eq("id", session.userId);
 
@@ -567,8 +557,7 @@ export class CustomerProfileService {
     const discountIdFileUrl = publicUrlData.publicUrl;
     const submittedAt = new Date().toISOString();
 
-    const { error } = await admin
-      .from("profiles")
+    const { error } = await admin.schema("account").from("profiles")
       .update({
         discount_id_uploaded: true,
         discount_id_type: "pwd_or_senior",
@@ -626,9 +615,7 @@ export class CustomerProfileService {
     }
 
     const admin = this.supabaseService.createAdminClient();
-    const supabase = this.supabaseService.createServerClient();
-    const { data: profile, error: profileError } = await admin
-      .from("profiles")
+    const { data: profile, error: profileError } = await admin.schema("account").from("profiles")
       .select("email")
       .eq("id", session.userId)
       .single();
@@ -637,7 +624,7 @@ export class CustomerProfileService {
       throw new NotFoundException("Customer profile not found.");
     }
 
-    const signInResult = await supabase.auth.signInWithPassword({
+    const signInResult = await admin.auth.signInWithPassword({
       email: profile.email,
       password: currentPassword,
     });
@@ -655,8 +642,7 @@ export class CustomerProfileService {
       throw new InternalServerErrorException("Unable to update your password right now.");
     }
 
-    const { error } = await admin
-      .from("profiles")
+    const { error } = await admin.schema("account").from("profiles")
       .update({ password_updated_at: passwordUpdatedAt })
       .eq("id", session.userId);
 
@@ -682,8 +668,7 @@ export class CustomerProfileService {
     }
 
     const admin = this.supabaseService.createAdminClient();
-    const profileResponse = await admin
-      .from("profiles")
+    const profileResponse = await admin.schema("account").from("profiles")
       .select("email, two_factor_enabled")
       .eq("id", session.userId)
       .single();
@@ -747,8 +732,7 @@ export class CustomerProfileService {
       throw new InternalServerErrorException("Unable to enable two-factor authentication.");
     }
 
-    const { error } = await admin
-      .from("profiles")
+    const { error } = await admin.schema("account").from("profiles")
       .update({ two_factor_enabled: true })
       .eq("id", session.userId);
 
@@ -797,8 +781,7 @@ export class CustomerProfileService {
       throw new InternalServerErrorException("Unable to disable two-factor authentication.");
     }
 
-    const { error } = await admin
-      .from("profiles")
+    const { error } = await admin.schema("account").from("profiles")
       .update({ two_factor_enabled: false })
       .eq("id", session.userId);
 

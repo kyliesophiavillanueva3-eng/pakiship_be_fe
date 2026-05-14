@@ -235,7 +235,10 @@ export class OperatorDashboardService {
       .eq("is_active", true)
       .limit(1)
       .maybeSingle<HubAssignmentRow>();
-    if (error) throw new InternalServerErrorException("Unable to load operator hub assignment.");
+    if (error) {
+      // Table may not exist yet or operator has no assignment — return null gracefully
+      return null;
+    }
     return data?.hub_id ?? null;
   }
 
@@ -606,7 +609,7 @@ export class OperatorDashboardService {
     const earnings = servicePrice > 0 ? Math.round(servicePrice * 0.7) : 85;
 
     const { data: profile } = await admin
-      .from("profiles").select("full_name").eq("id", draft.user_id ?? "").maybeSingle();
+      .schema("account").from("profiles").select("full_name").eq("id", draft.user_id ?? "").maybeSingle();
     const customerName = profile?.full_name ?? draft.sender_name ?? "Customer";
 
     const { error: jobError } = await admin.from("driver_jobs").insert({

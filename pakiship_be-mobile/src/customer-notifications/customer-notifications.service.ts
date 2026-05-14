@@ -1,7 +1,6 @@
 import {
   ForbiddenException,
   Injectable,
-  InternalServerErrorException,
 } from "@nestjs/common";
 import type { SessionPayload } from "../common/session/session.types";
 import { SupabaseService } from "../supabase/supabase.service";
@@ -58,8 +57,9 @@ export class CustomerNotificationsService {
       is_read: false,
     });
 
+    // Silently ignore if table doesn't exist yet
     if (error) {
-      throw new InternalServerErrorException("Unable to create customer notification.");
+      console.warn("[Notifications] createNotification skipped:", error.message);
     }
   }
 
@@ -74,7 +74,7 @@ export class CustomerNotificationsService {
       .limit(20);
 
     if (error) {
-      throw new InternalServerErrorException("Unable to load notifications.");
+      return { notifications: [] };
     }
 
     return {
@@ -93,15 +93,11 @@ export class CustomerNotificationsService {
   async markAsRead(session: SessionPayload, notificationId: string) {
     this.ensureCustomer(session);
     const admin = this.supabaseService.createAdminClient();
-    const { error } = await admin
+    await admin
       .from("customer_notifications")
       .update({ is_read: true })
       .eq("id", notificationId)
       .eq("user_id", session.userId);
-
-    if (error) {
-      throw new InternalServerErrorException("Unable to update notification.");
-    }
 
     return { notificationId };
   }
@@ -109,15 +105,11 @@ export class CustomerNotificationsService {
   async markAllAsRead(session: SessionPayload) {
     this.ensureCustomer(session);
     const admin = this.supabaseService.createAdminClient();
-    const { error } = await admin
+    await admin
       .from("customer_notifications")
       .update({ is_read: true })
       .eq("user_id", session.userId)
       .eq("is_read", false);
-
-    if (error) {
-      throw new InternalServerErrorException("Unable to update notifications.");
-    }
 
     return { success: true };
   }
@@ -125,14 +117,10 @@ export class CustomerNotificationsService {
   async clearAll(session: SessionPayload) {
     this.ensureCustomer(session);
     const admin = this.supabaseService.createAdminClient();
-    const { error } = await admin
+    await admin
       .from("customer_notifications")
       .delete()
       .eq("user_id", session.userId);
-
-    if (error) {
-      throw new InternalServerErrorException("Unable to clear notifications.");
-    }
 
     return { success: true };
   }

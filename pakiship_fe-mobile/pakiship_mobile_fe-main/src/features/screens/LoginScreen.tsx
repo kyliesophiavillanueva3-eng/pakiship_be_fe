@@ -49,7 +49,7 @@ type LoginScreenProps = {
 
 export default function LoginScreen({ onBackToLauncher }: LoginScreenProps) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { setCurrentUser } = useAuthSession();
+  const { setCurrentUser, setSessionToken } = useAuthSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [secureTextEntry, setSecureTextEntry] = useState(true);
@@ -95,6 +95,9 @@ export default function LoginScreen({ onBackToLauncher }: LoginScreenProps) {
       });
 
       setCurrentUser(result.user);
+      if (result.sessionToken) {
+        setSessionToken(result.sessionToken);
+      }
 
       const appRole = normalizeAppRole(result.user?.role);
 

@@ -59,6 +59,7 @@ export class AuthController {
       requiresTwoFactor,
       challengeToken:
         requiresTwoFactor && "challengeToken" in result ? result.challengeToken : undefined,
+      sessionToken: !requiresTwoFactor ? createSessionToken(result.session) : undefined,
     };
   }
 
@@ -137,6 +138,7 @@ export class AuthController {
     return {
       user: result.user,
       redirectPath: result.redirectPath,
+      sessionToken: createSessionToken(result.session),
     };
   }
 

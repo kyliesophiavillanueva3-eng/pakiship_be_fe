@@ -52,8 +52,7 @@ export class SettingsRepository {
 
   async getByUserId(userId: string) {
     const supabase = this.supabaseService.createAdminClient();
-    const result = await supabase
-      .from("profiles")
+    const result = await supabase.schema("account").from("profiles")
       .select(
         "id, role, notification_preferences, two_factor_enabled, password_updated_at",
       )
@@ -84,8 +83,7 @@ export class SettingsRepository {
       patch.two_factor_enabled = input.twoFactorEnabled;
     }
 
-    const result = await supabase
-      .from("profiles")
+    const result = await supabase.schema("account").from("profiles")
       .update(patch)
       .eq("id", userId)
       .select(
@@ -101,8 +99,7 @@ export class SettingsRepository {
 
   async findProfileAccessByUserId(userId: string) {
     const supabase = this.supabaseService.createAdminClient();
-    return supabase
-      .from("profiles")
+    return supabase.schema("account").from("profiles")
       .select("id, email, role")
       .eq("id", userId)
       .maybeSingle();
@@ -110,8 +107,7 @@ export class SettingsRepository {
 
   async updatePasswordTimestamp(userId: string) {
     const supabase = this.supabaseService.createAdminClient();
-    return supabase
-      .from("profiles")
+    return supabase.schema("account").from("profiles")
       .update({ password_updated_at: new Date().toISOString() })
       .eq("id", userId)
       .select("id")
